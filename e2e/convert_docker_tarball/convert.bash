@@ -25,9 +25,11 @@ readonly REGISTRY_LAUNCHER=${RUNFILES}/${4#"external/"}
 
 # Launch a registry instance at a random port
 source "${REGISTRY_LAUNCHER}"
-REGISTRY=$(start_registry $TMP $TMP/output.log)
+start_registry $TMP $TMP/output.log
+REGISTRY=$(get_registry)
+trap 'stop_registry' EXIT
 
-readonly REPOSITORY="${REGISTRY}/local" 
+readonly REPOSITORY="${REGISTRY}/local"
 
 
 REF=$(mktemp)

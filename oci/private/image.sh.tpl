@@ -12,6 +12,8 @@ readonly STORAGE_DIR="{{storage_dir}}"
 
 readonly STDERR=$(mktemp)
 
+trap 'stop_registry' EXIT
+
 silent_on_success() {
     CODE=$?
     if [ "${CODE}" -ne 0 ]; then
@@ -25,7 +27,7 @@ function get_option() {
     shift
     for ARG in "$@"; do
         case "$ARG" in
-            ($name=*) echo ${ARG#$name=};; 
+            ($name=*) echo ${ARG#$name=};;
         esac
     done
 }
@@ -65,11 +67,11 @@ function base_from_layout() {
     if grep -q "MANIFEST_INVALID" "${output}"; then
     cat >&2 << EOF
 
-zot registry does not support docker manifests. 
+zot registry does not support docker manifests.
 
 crane registry does support both oci and docker images, but is more memory hungry.
 
-If you want to use the crane registry, remove "zot_version" from "oci_register_toolchains". 
+If you want to use the crane registry, remove "zot_version" from "oci_register_toolchains".
 
 EOF
 
@@ -82,7 +84,8 @@ EOF
 # this will redirect stderr(2) to stderr file.
 {
 source "${REGISTRY_LAUNCHER}"
-readonly REGISTRY=$(start_registry "${STORAGE_DIR}" "${STDERR}")
+start_registry "${STORAGE_DIR}" "${STDERR}"
+readonly REGISTRY=$(get_registry)
 
 OUTPUT=""
 WORKDIR=""
@@ -137,10 +140,10 @@ done
 
 REF=$("${CRANE}" "${FIXED_ARGS[@]}")
 
-if [ ${#ENV_EXPANSIONS[@]} -ne 0 ]; then 
+if [ ${#ENV_EXPANSIONS[@]} -ne 0 ]; then
     env_expansion_filter=\
 '[$raw | match("\\${?([a-zA-Z0-9_]+)}?"; "gm")] | reduce .[] as $match (
-    {parts: [], prev: 0}; 
+    {parts: [], prev: 0};
     {parts: (.parts + [$raw[.prev:$match.offset], $envs[$match.captures[0].string]]), prev: ($match.offset + $match.length)}
 ) | .parts + [$raw[.prev:]] | join("")'
     base_config=$("${CRANE}" config "${REF}")
@@ -156,7 +159,7 @@ if [ ${#ENV_EXPANSIONS[@]} -ne 0 ]; then
 fi
 
 # TODO: https://github.com/google/go-containerregistry/issues/1515
-if [ -n "${WORKDIR}" ]; then 
+if [ -n "${WORKDIR}" ]; then
     REF=$("${CRANE}" config "${REF}" | "${JQ}"  --arg workdir "${WORKDIR}" '.config.WorkingDir = $workdir' | "${CRANE}" edit config "${REF}")
 fi
 

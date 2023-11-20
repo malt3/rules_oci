@@ -16,6 +16,7 @@ function start_registry() {
 }
 EOF
     "${ZOT}" serve "${config_path}" >> $output 2>&1 &
+    readonly REGISTRY_PID=$!
 
     local timeout=$((SECONDS+${deadline}))
 
@@ -29,6 +30,25 @@ EOF
         echo "registry didn't become ready within ${deadline}s." >&2
         return 1
     fi
-    echo "127.0.0.1:${port}"
+    readonly REGISTRY_ADDRESS="127.0.0.1:${port}"
+    return 0
+}
+
+function stop_registry() {
+    if [[ -z "${REGISTRY_PID+x}" ]]; then
+        echo "Registry not started"
+        return 0
+    fi
+    echo "Stopping registry process ${REGISTRY_PID}"
+    kill -9 "${REGISTRY_PID}" || true
+    return 0
+}
+
+function get_registry() {
+    if [[ -z "${REGISTRY_ADDRESS+x}" ]]; then
+        echo "Registry not started"
+        return 1
+    fi
+    echo "${REGISTRY_ADDRESS}"
     return 0
 }
