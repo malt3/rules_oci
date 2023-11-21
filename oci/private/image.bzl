@@ -179,14 +179,14 @@ def _oci_image_impl(ctx):
 
     action_env = {}
 
-    # Windows: Don't convert arguments like --entrypoint=/some/bin to --entrypoint=C:/msys64/some/bin
-    if ctx.target_platform_has_constraint(ctx.attr._windows_constraint[platform_common.ConstraintValueInfo]):
-        # See https://www.msys2.org/wiki/Porting/:
-        # > Setting MSYS2_ARG_CONV_EXCL=* prevents any path transformation.
-        action_env["MSYS2_ARG_CONV_EXCL"] = "*"
+    # # Windows: Don't convert arguments like --entrypoint=/some/bin to --entrypoint=C:/msys64/some/bin
+    # if ctx.target_platform_has_constraint(ctx.attr._windows_constraint[platform_common.ConstraintValueInfo]):
+    #     # See https://www.msys2.org/wiki/Porting/:
+    #     # > Setting MSYS2_ARG_CONV_EXCL=* prevents any path transformation.
+    #     action_env["MSYS2_ARG_CONV_EXCL"] = "*"
 
-        # This one is for Windows Git MSys
-        action_env["MSYS_NO_PATHCONV"] = "1"
+    #     # This one is for Windows Git MSys
+    #     action_env["MSYS_NO_PATHCONV"] = "1"
 
     ctx.actions.run(
         inputs = depset(transitive = inputs_depsets),
