@@ -42,7 +42,7 @@ attrs = {
     "_run_template": attr.label(
         default = Label("//oci/private:tarball_run.sh.tpl"),
         doc = """ \
-              The template used to load the container. The default template uses Docker, but this template could be replaced to use podman, runc, or another runtime. Please reference the default template to see available substitutions. 
+              The template used to load the container. The default template uses Docker, but this template could be replaced to use podman, runc, or another runtime. Please reference the default template to see available substitutions.
         """,
         allow_single_file = True,
     ),

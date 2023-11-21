@@ -85,38 +85,14 @@ def _maybe_wrap_launcher_for_windows(ctx, bash_launcher):
     - make sure the bash_launcher is in the inputs to the action
     - @bazel_tools//tools/sh:toolchain_type should appear in the rules toolchains
     """
-    if not ctx.target_platform_has_constraint(ctx.attr._windows_constraint[platform_common.ConstraintValueInfo]):
-        return bash_launcher
 
-    win_launcher = ctx.actions.declare_file("wrap_%s.bat" % ctx.label.name)
-    ctx.actions.write(
-        output = win_launcher,
-        content = r"""@echo off
-SETLOCAL ENABLEEXTENSIONS
-SETLOCAL ENABLEDELAYEDEXPANSION
-for %%a in ("{bash_bin}") do set "bash_bin_dir=%%~dpa"
-set PATH=%bash_bin_dir%;%PATH%
-set args=%*
-rem Escape \ and * in args before passing it with double quote
-if defined args (
-  set args=!args:\=\\\\!
-  set args=!args:"=\"!
-)
-"{bash_bin}" -c "{launcher} !args!"
-""".format(
-            bash_bin = ctx.toolchains["@bazel_tools//tools/sh:toolchain_type"].path,
-            launcher = bash_launcher.path,
-        ),
-        is_executable = True,
-    )
-
-    return win_launcher
+    return bash_launcher
 
 def _file_exists(rctx, path):
     result = rctx.execute(["stat", path])
     return result.return_code == 0
 
-_INDEX_JSON_TMPL="""\
+_INDEX_JSON_TMPL = """\
 {{
    "schemaVersion": 2,
    "mediaType": "application/vnd.oci.image.index.v1+json",
@@ -130,12 +106,11 @@ _INDEX_JSON_TMPL="""\
 }}"""
 
 def _build_manifest_json(media_type, size, digest, platform):
-
     optional_platform = ""
 
     if platform:
         platform_parts = platform.split("/", 3)
-        
+
         optional_variant = ""
         if len(platform_parts) == 3:
             optional_variant = ''',
@@ -146,12 +121,12 @@ def _build_manifest_json(media_type, size, digest, platform):
             "architecture": "{}",
             "os": "{}"{optional_variant}
          }}""".format(platform_parts[1], platform_parts[0], optional_variant = optional_variant)
-        
+
     return _INDEX_JSON_TMPL.format(
-        media_type, 
+        media_type,
         size,
         digest,
-        optional_platform = optional_platform
+        optional_platform = optional_platform,
     )
 
 util = struct(
